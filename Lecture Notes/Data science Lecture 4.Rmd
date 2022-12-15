@@ -1,0 +1,270 @@
+---
+title: "Data Science: Lecture 4"
+output: html_notebook
+---
+
+## Exploratory Data Analysis
+
+```{r}
+
+require(tidyverse)
+require(nycflights13)
+require(lubridate)
+require(hexbin)
+
+
+```
+
+
+### Catagorical Variables
+```{r}
+
+diamonds
+# Ordinal data is catagorical but have meaning/order such as the different cuts
+
+```
+
+
+### Typing Optimizations
+```{r}
+
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x=cut))
+
+diamonds %>%
+  ggplot() +
+  geom_bar(aes(cut))
+
+```
+
+
+### Count Optimize
+```{r}
+
+diamonds %>% count(cut)
+
+```
+
+
+## Continous Variables
+```{r}
+
+diamonds %>% ggplot() + geom_histogram(aes(x = carat), bins = 30) # 30 bins is the base bin size
+
+diamonds %>% ggplot() + geom_histogram(aes(x = carat), binwidth = .25)
+
+```
+
+
+```{r}
+
+diamonds %>% count(cut_width(carat, 0.5) %>% fct_rev())
+
+```
+
+
+## Removing Outlier Values
+```{r}
+
+small_d <- diamonds %>%
+  filter(carat < 3)
+
+small_d
+
+```
+
+
+## Distributions
+```{r}
+
+ggplot(small_d) + geom_freqpoly(aes(x = carat, color = cut), binwidth = 1/10)
+#ggplot(small_d) + geom_freqpoly(aes(x = carat), binwidth = 1/10)
+#Frequency poly allows for the inclusion on catagorical variables
+
+```
+
+
+```{r}
+
+ggplot(small_d) + 
+  geom_histogram(aes(x = carat), binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(0, 3, 1/10))
+
+```
+
+
+## 
+```{r}
+
+faithful %>% 
+  ggplot(aes(x = eruptions)) +
+  geom_histogram((binwidth = 0.2))
+
+```
+
+## Removing Outliers
+
+```{r}
+
+d_removed <- diamonds %>% filter(between(y,2,20))
+
+```
+
+## Replace values with N/A
+```{r}
+
+d_replaced <- diamonds %>%
+    mutate(y = if_else(y<2 | y>20, NA_real_, y))
+
+```
+
+## With Outlier replaced
+```{r}
+
+d_replaced %>% filter(is.na(y))
+
+```
+
+
+## Look at both datasets (one replaced, one removed)
+```{r}
+
+ggplot(data = d_replaced) +
+  geom_histogram(mapping = aes(x = y), binwidth = .5)
+  
+ggplot(data = d_removed) +
+  geom_histogram(mapping = aes(x = y), binwidth = .5)
+
+
+# hard to see a difference due to the low amount of outliers
+
+```
+
+
+## Determine if Depature time is missing
+```{r}
+
+cancelled_flts <- flights %>%
+    mutate(
+      cancelled = is.na(dep_time),
+      sched_hour = sched_dep_time %/% 100,
+      sched_min = sched_dep_time %% 100,
+      sched_dep_time = sched_hour + sched_min/60
+)
+
+ggplot(data = cancelled_flts) +
+  geom_freqpoly(mapping = aes(x = sched_dep_time, color = cancelled), binwidth = 1/4)
+    
+
+```
+
+
+## Missed section
+```{r}
+
+# He uploads the code online if I need it.
+
+```
+
+
+# Covariation
+
+## Catagorical vs. Continous
+```{r}
+
+ggplot(data = diamonds, mapping = aes(x = price)) +
+  geom_freqpoly(mapping = aes(color = cut), binwidth = 500) +
+  scale_color_hue() # Makes colors easier to see, especially yellow
+  
+
+```
+
+## Usefule to find the density
+```{r}
+
+ggplot(data = diamonds) +
+  geom_freqpoly(mapping = aes(x = price, y = ..density.. , color = cut), binwidth = 500, size = 2) +
+  scale_color_hue()
+
+ggplot(data = diamonds, mapping = aes(x = price)) +
+  geom_freqpoly(mapping = aes(color = cut), binwidth = 500) +
+  scale_color_hue()
+
+```
+
+```{r}
+
+ggplot(data = diamonds) +
+  geom_boxplot(mapping = aes(x = cut, y = price))
+
+# Discussed how box plots are made, and what each seperate part means
+
+ggplot(data = diamonds) +
+  geom_violin(mapping = aes(x = cut, y = price), draw_quantiles = .5)
+
+```
+
+## Different mpg per car type
+```{r}
+
+ggplot(data = mpg) +
+  geom_boxplot(mapping = aes(x = class, y = hwy))
+
+ggplot(data = mpg, mapping = aes(x = fct_reorder(class, hwy, .fun = median()), y = hwy)) +
+  geom_boxplot() + # Reorder x axis to the median
+  coord_flip() 
+  
+```
+
+## Contengcy Table
+```{r}
+
+diamonds %>% count(color, cut)
+
+```
+
+## 
+```{r}
+
+ggplot(data = diamonds) +
+  geom_count(mapping = aes(x = cut, y = color))
+
+```
+
+##
+```{r}
+
+diamonds %>%
+  count(color, cut) %>%
+  ggplot() +
+    geom_tile(mapping = aes(x = cut, y = color, fill = n))
+
+```
+
+
+# Continous v.s. Continous
+
+## Missed some stuff
+
+## Hex plot
+```{r, fig.width=4, fig.height= 3}
+
+ggplot(data = diamonds) +
+  geom_hex(mapping = aes(x = carat, y = price))
+
+
+```
+
+```{r, fig.width=10, fig.height= 10}
+
+P <- ggplot(data = diamonds) +
+  geom_hex(mapping = aes(x = carat, y = price, fill = log2(..count..)))
+
+# Change Color scale
+P
+P + scale_fill_continuous(low="red", high = "yellow")
+P + scale_fill_distiller(pallete = "Y10rRd")
+P + scale_fill_distiller(pallete = "Greens")
+P + scale_fill_distiller(pallete = "Greys")
+
+```

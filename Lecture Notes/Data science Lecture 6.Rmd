@@ -1,0 +1,167 @@
+---
+title: "Data Science Lecture 6"
+output: html_notebook
+---
+
+
+# Models 
+
+```{r}
+require(tidyverse)
+require(modelr)
+require()
+```
+
+## Modeling some data
+```{r}
+# Build a model to capture the data's characteristics
+
+sim1
+
+```
+
+
+## Looking at sim1
+```{r}
+
+ggplot(sim1, aes(x,y)) + 
+  geom_point()
+
+```
+
+
+## Fitting a linear model
+```{r}
+
+models <- tibble(
+  a_0 = runif(250,-20,40),
+  a_1 = runif(250,-5,5)
+)
+
+ggplot(sim1, aes(x,y)) +
+  geom_abline(aes(intercept = a_0, slope = a_1), data = models, alpha = 1/4) +
+  geom_point()
+
+## Most of the  models are terrible, but some are better but still bad.
+
+```
+
+
+## How good is the fit of the linear model?
+```{r}
+
+# Model
+
+model1 <- function(a, data) {
+  a[1] + data$x*a[2]
+}
+
+```
+
+
+### Running Model1 with different slopes
+```{r}
+
+model1(c(7,1.5), sim1)
+
+```
+
+
+### Plotting previous on sim1 dataset
+```{r}
+
+sim1_model <- sim1 %>%
+  mutate(y_prediction = model1(c(7,1.5), sim1))
+
+sim1_model %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_point(aes(y = y_prediction), color = 'red') +
+  geom_line(aes(y = y_prediction), color = 'red')
+
+```
+
+
+### Evaluate
+```{r}
+
+RMS_distance <- function(mod_parameters, data) {
+  y_prediction <- model1(mod_parameters, data)
+  dist <- data$y - y_prediction
+  return(sqrt(mean(dist^2))) # Return is unnecessary because it is the final line. Making it the the value of the function.
+}
+
+RMS_distance(c(7,1.5), sim1)
+
+```
+
+
+### Testing a lot of models
+```{r}
+
+sim1_dist <- function(a_0, a_1) {
+  RMS_distance(c(a_0,a_1), sim1)
+}
+
+models_d <- models %>%
+  mutate(dist = map2_dbl(a_0, a_1, sim1_dist)) #map2_dbl, look into how this iterates over the dataset.
+
+models_d
+
+```
+
+
+### Which model is the best?
+```{r}
+
+models_d %>% arrange(dist)
+
+```
+
+
+```{r}
+
+ggplot(models_d, ...) + 
+  geom_histogram(bins = 50)
+
+```
+
+### Highlighting the best models
+```{r}
+
+ggplot(sim1, aes(x,y))+
+  geom_point(size = 2, color = "grey40") +
+  geom_abline(data = filter(models_d, rank(dist) < 10),
+              aes(intercept = a_0, slope = a_1, color = -dist))
+
+
+```
+
+
+### Plot the a_0 and a_1
+```{r}
+
+# Not working for some reason
+
+ggplot(models_d, aes(a_0, a_1)) +
+  geom_point(data = filter(models_d, rank(dist) <= 10, size == 4, color == "red") +
+                             geom_point(aes(color = -dist)))
+
+```
+
+
+### Systematic approach
+```{r}
+
+## Also not working ... 
+
+grid_of_models <-
+expand.grid(
+  a_0 = seq(-5, 20, length = 25),
+  a_1 = 
+)
+
+## Did not have enough time to code the plots
+
+```
+

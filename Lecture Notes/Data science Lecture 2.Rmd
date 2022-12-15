@@ -1,0 +1,83 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+##Loading Libraries
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(maps)
+head(diamonds)
+```
+
+
+## Violin Plot
+```{r}
+
+ggplot(data = diamonds)+
+  geom_violin(mapping = aes(cut,depth)) #stat_ydensity
+
+```
+## Some Stuff I have missed
+```{r}
+
+```
+
+
+## Start of Lecture
+```{r}
+
+ggplot(data=mpg, mapping=aes(class,hwy)) +
+  geom_boxplot() +
+  coord_flip()
+
+```
+
+
+## US Map
+```{r}
+
+state <- as_tibble(map_data("state"))
+
+ggplot(state, aes(x = long, lat, group=group)) + 
+  geom_polygon(fill="white", colour = 'black') +
+  coord_quickmap() # Fixes map for distortions
+
+```
+
+## Bar Plots of Diamonds
+
+```{r}
+
+bar1 <- ggplot(data=diamonds) +
+  geom_bar(mapping = aes(cut,fill = cut), show.legend = FALSE, width = 1) +
+  theme(aspect.ratio=1) +
+  labs(x=NULL, y=NULL)
+
+bar1
+
+bar1 + coord_flip()
+
+bar1 + coord_polar()
+
+bar1 + coord_polar(theta = "y")
+```
+
+## Changing to be full
+```{r}
+
+
+bar2 <- ggplot(data=diamonds) +
+  geom_bar(mapping = aes(x=1,fill = cut), show.legend = FALSE, width = 1) + # Changing cut to x=1
+  theme(axis.ticks.y = element_blank(), axis.text.y=element_blank()) + # Changing Theme
+  labs(x=NULL, y=NULL) 
+  
+bar2
+
+bar2 + coord_polar()
+
+bar2 + coord_polar(theta = "y")
+
+```

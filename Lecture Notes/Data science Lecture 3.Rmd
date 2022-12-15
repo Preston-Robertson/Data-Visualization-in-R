@@ -1,0 +1,105 @@
+---
+title: "Lecture 3k"
+output:
+  word_document:
+    toc: yes
+  pdf_document: default
+  html_notebook:
+    highlight: pygments
+    theme: redable
+    toc: yes
+---
+
+##Loading Libraries
+
+```{r}
+#install.packages("nycflights13")
+library(ggplot2)
+library(tidyverse)
+library(nycflights13)
+library(lubridate)
+library(dplyr)
+options(tibble.print_max = 5, tibble.print_min=5) 
+theme_set(theme_bw(base_size = 14)) # Changes font size
+
+flights
+```
+
+## Filter the Data
+
+```{r}
+filter(flights, month == 1, day == 1) # January 1st
+filter(flights, month == 1, day >= 25) # All days past the 25th
+```
+
+### FLoating point values
+
+```{r}
+
+print(sqrt(2)^2)
+(sqrt(2)^2) == 2
+
+# Rounding causes issues, use the near function instead when using exacts
+
+near((sqrt(2)^2), 2)
+
+filter(flights, near(dep_dealy,1))
+filter(flights, month == 1, day == 1) #These lines work together forming an "and" function
+filter(flights, month ==1 | month == 2) # Works as an "or" function
+
+```
+
+### Filter Properties
+
+```{r}
+
+filter(flights, month == 1, day == 1) #These lines work together forming an "and" function
+filter(flights, month ==1 | month == 2) # Works as an "or" function
+filter(flights, month%in% c(1,2,3)) # Also an "or" function
+
+# "c" explanation
+## Everything is a vector in r
+## "c" stands for combine and it combines them into an array
+```
+
+
+### More Properties
+
+```{r}
+
+filter(flights, arr_delay <= 120 & dep_delay <= 120) # Look at book for more commands/properties, will be needed for homework
+
+```
+
+
+## Missing Values
+
+```{r}
+# NA stands for not available ... Missed the rest of class, also dataset will not work
+```
+
+
+## Processing Data through Pipes
+```{r}
+
+by_dest <- group_by(flights, dest)
+
+by_dest
+
+```
+
+```{r}
+ggplot(data = delay) + 
+  geom_histogram(mapping = aes(x = count), bins = 100)
+```
+
+
+## Got it to work, with 20mins left in class
+```{r}
+
+flights %>%
+  groupby(year,month, day) %>%
+  summarise(mean = mean(dep_delay, na.rm= true))
+
+```
+

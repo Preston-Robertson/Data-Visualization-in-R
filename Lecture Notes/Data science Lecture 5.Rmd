@@ -1,0 +1,250 @@
+---
+title: "Data Science"
+output: html_notebook
+---
+
+## Importing Libraries
+
+```{r}
+
+require(tidyverse)
+require(nycflights13)
+require(lubridate)
+require(hexbin)
+
+```
+
+## Loading Datasets
+
+```{r}
+
+who
+
+```
+
+### ...
+```{r}
+
+who1 <- who %>%
+  pivot_longer(new_sp_m014:newrel_f65, names_to = "code", values_to = "cases") #Turning several columns into one (opposite of one hot encoding)
+
+who1
+
+########################################
+
+who2 <- who %>%
+  pivot_longer(new_sp_m014:newrel_f65, names_to = "code", values_to = "cases", values_drop_na = TRUE)
+
+who2 
+
+```
+
+### Changing "newrel" to "new_rel" to make the name format consistent
+```{r}
+
+who3 <- who2 %>% 
+  mutate(code = str_replace(code, "newrel", "new_rel"))
+
+who3
+
+```
+
+### split data into 3 columns based on underscore
+
+```{r}
+
+who4 <- who3 %>% 
+  separate(code, c("newold", "type", "sexage"), sep = "_")
+
+who4
+
+```
+
+### Get rid of "newold" because it does not give relevant information, also getting rid of Country names
+```{r}
+
+who5 <- who4 %>%
+  select(-iso2,-iso3,-newold)
+
+who5
+
+```
+
+### Seperating Sex and Age
+```{r}
+
+who6 <- who5 %>%
+  separate(sexage, c("sex","age"), sep = 1 )
+
+who6
+
+```
+
+### Pipeline that makes the above all operations
+```{r}
+
+tidywho1 <- who %>%
+  pivot_longer(new_sp_m014:newrel_f65, names_to = "code", values_to = "cases", values_drop_na = TRUE) %>%
+  mutate(code = str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("newold", "type", "sexage"), sep = "_") %>%
+  select(-iso2,-iso3,-newold) %>%
+  separate(sexage, c("sex","age"), sep = 1 )
+  
+tidywho1
+
+```
+
+## Relational Data
+```{r}
+
+airlines
+airports
+planes
+weather
+
+# How to tell if a column is a key for a specific table? 
+
+```
+
+### ...
+```{r}
+
+planes %>% count(tailnum) %>% filter(n>1) #Empty which means that each variable uniquely represents the row
+
+```
+
+### ...
+```{r}
+
+weather %>% 
+  count(year, month, day, hour, origin) %>% filter(n>1) #Shows how even mistakes happen in the most used datasets
+
+```
+
+### Surrogate key can always be created. Easiest is the row number
+```{r}
+
+flights %>%
+  mutate(key = row_number()) %>%# Added at the end
+  count(key) %>%
+  filter(n>1)
+
+flights
+
+```
+
+### ..
+```{r}
+
+flights2 <- flights %>%
+  select(year:day, hour, origin, dest, carrier) %>%
+  left_join(airlines, by = "carrier")
+
+flights2
+
+```
+
+## Creating Data table for different Joins
+```{r}
+
+x <- tribble(
+  ~key, ~val_x,
+  1, "x1",
+  2, "x2",
+  3, "x3",
+)
+  
+y <- tribble(
+  ~key, ~val_y,
+  1, "y1",
+  2, "y2",
+  4, "y3",
+)
+```
+
+### How joins work
+```{r}
+
+# Prioritizes the column that is joining. Left join prio's the left hand table and has NA in the right table (left/right)
+# Full join takes all the data values and creates NA in all missing areas. 
+
+```
+
+
+## Strings
+```{r}
+## NOT COVERED IN LECTURE, but book talks about it.
+```
+
+
+## Factors
+```{r}
+
+x1 <- c("Jan","Apr","Jam", "Mar")
+
+
+month_levels <- c(
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+
+y1 <- factor(x1, levels = month_levels)
+
+y2 <- parse_factor(x1, levels = month_levels) # to show the misspelled error
+
+```
+
+### GSS
+```{r}
+gss_cat
+```
+
+### What are the levels of each Variable
+```{r}
+
+gss_cat %>% count(race)
+levels(gss_cat$race) #all possible values, NA is possible but does not show up
+
+```
+
+### Bar
+```{r}
+
+without <- ggplot(gss_cat, aes(race))+
+  geom_bar()
+
+with <- ggplot(gss_cat, aes(race))+
+  geom_bar() + 
+  scale_x_discrete(drop = FALSE)
+
+with
+without
+
+```
+
+### Modifying Factor Order
+```{r}
+
+gss_cat
+
+relig <- gss_cat %>%
+  group_by(relig) %>%
+  summarise(
+    age = mean(age, na.rm = TRUE),
+    tvhours = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+
+relig
+
+
+```
+
+```{r}
+
+ggplot(relig, aes(tvhours, fct_reorder(relig, tvhours))) +
+  geom_point()
+
+
+```
+

@@ -1,0 +1,93 @@
+---
+title: "Data science: Lecture 1"
+output: html_notebook
+---
+
+## Loading Libraries ###########################################################
+
+```{r}
+library(ggplot2)
+head(mpg)
+```
+
+
+## Topic 1 #####################################################################
+
+```{r}
+ggplot(data=mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class)) +
+  facet_grid(cols = vars(displ))
+
+# Poorly Made Graph
+```
+
+
+```{r}
+g1 <- ggplot(data=mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class)) +
+  facet_grid(rows = vars(cyl), cols = vars(drv), labeller = label_both)
+
+g1
+
+# Facet_Grid does ?
+# Geom_Point does?
+# Saving a graph allows to be inputted into the console and pulled up on a side menu
+``` 
+
+## Geometric Objects #################################################
+
+```{r}
+
+ggplot(data=mpg) +
+  geom_point(mapping = aes(x= displ, y = hwy))
+ggplot(data=mpg) +
+  geom_smooth(mapping = aes(x= displ, y = hwy))
+
+
+# The difference is between the "point" and "smooth"
+## Point is a scatter plot
+## Smoothly fitted shape between the points (line follows trend and Confidential Interval)
+```
+
+```{r}
+
+ggplot(data=mpg) +
+  geom_point(mapping = aes(x= displ, y = hwy, color = drv), alpha = 0.5) +
+  geom_smooth(mapping = aes(x= displ, y = hwy, linetype = drv))
+
+# Stacking the graphs (goes in order of code)
+# Alpha determines how transparent the line/point is (intensity level)
+```
+
+```{r}
+
+g2 <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth()
+g2
+
+# Mapping can be done in the top ggplot to ensure you did not mess up the second iteration
+```
+
+## Statstical Transformations #################################################
+
+```{r}
+head(diamonds)
+```
+
+
+```{r}
+
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut)) #+ coord_flip()
+
+# Count is not in the dataset, the geometry automatically makes geometry of the y axis.
+# stat_count/geom_bar/geom_col are all the same. 
+# coord_flip() switches columns to rows.
+```
+
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, fill = cut), color = "black")
+```
+

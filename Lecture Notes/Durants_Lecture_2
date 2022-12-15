@@ -1,0 +1,125 @@
+---
+title: "Lecture 2"
+author: "Durant Fullingotn"
+date: "2/2/2022"
+output: word_document
+---
+# Some wording stuff:
+
+*emphasize* words
+**bold** words
+
+* Itemized
+* List
+
+
+```{r}
+library(tidyverse)
+tmp = tribble(
+  ~Fruit, ~Sweetness,
+  'Oranges', 7,
+  'Bananas', 5,
+  'Pears',   10
+)
+
+ggplot(data=tmp)+
+  geom_bar(mapping = aes(Fruit,Sweetness),stat = 'identity')
+```
+
+```{r}
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(cut,..count..))
+
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(cut,..prop.., group = 1))
+
+
+```
+group=1 makes it where each group is a vector with # of entries..?
+group = 1 makes it so that it can be proportional so it is all grouped to one setting...
+
+
+```{r}
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(cut,..count..,fill = color, group = color), color = 'black')
+```
+
+
+# Summarizing Distributions
+Use a Summary as one method:
+```{r}
+ggplot(data = diamonds)+
+  stat_summary(mapping=aes(cut,depth),
+               fun.min = min, fun.max = max, fun = median)
+```
+Box Plots:
+```{r}
+ggplot(data = diamonds)+
+  stat_boxplot(mapping = aes(cut,depth), position = 'dodge')
+
+# geom_boxplot = SAME
+
+```
+Violin Plot
+```{r}
+ggplot(data = diamonds)+
+  geom_violin(mapping = aes(cut,depth))
+#stat_ydensity
+
+```
+```{r}
+ggplot(data = diamonds)+
+  geom_bar(mapping = aes(cut,fill = clarity), position = 'dodge')
+# Position is used to change the visualization of the filling in of the counts
+# fill = sets the percentage within each bar, proportional
+# dodge is the best, lets you see the bars beside each other
+# jitter.... yeah, its not great 
+
+```
+Jitter positoning...
+Small scales = Less accurate, so be careful
+Larger Scales = More Accurate, we can see the high desnities
+Randomness can be helpful and hurtful!
+BE. CAREFUL. 
+
+
+
+
+# Lecture 3
+```{r}
+ggplot(data=mpg, mapping=aes(class,hwy))+
+  geom_boxplot()+
+  coord_flip()
+ 
+```
+
+```{r}
+# Cartesian Coords
+state = as_tibble(map_data('state'))
+
+ggplot(state,aes(long,lat,group=group))+
+  geom_polygon(fill='white',colour = 'black')+
+  coord_quickmap() # Fixes map for distortions
+
+```
+
+```{r}
+#Polar Coords
+
+bar1 = ggplot(diamonds)+
+  geom_bar(mapping=aes(cut,fill=cut), show.legend = FALSE, width = 1)+
+  theme(aspect.ratio=1)+
+  labs(x=NULL,y=NULL)
+
+bar1
+
+bar1 + coord_flip()
+
+# Now we gonna plot in Polar Coords
+bar1 + coord_polar()
+# Could be a really cool chart for something. dunno what, but something...
+
+
+```
+
+
