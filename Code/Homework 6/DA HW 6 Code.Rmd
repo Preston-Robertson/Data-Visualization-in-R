@@ -1,0 +1,63 @@
+---
+title: "DA HW 6"
+author: "Preston Robertson"
+date: "6/22/2022"
+output: pdf_document
+---
+
+```{r}
+# Loading Libraries
+library(plotly)
+library(mvtnorm)
+
+
+```
+
+
+
+
+```{r}
+# Introduction to Plotly
+
+fig <- plot_ly(z = ~volcano)
+fig <- fig%>% add_surface()
+fig
+
+
+```
+
+
+
+
+
+```{r}
+
+xcords <- seq(-3,3, by = 0.1)
+ycords <- seq(-3,3,by = 0.1)
+
+lng = length(xcords)
+
+
+
+funvals = matrix(0, lng, lng)
+
+
+
+mu = c(0,0)
+sig <- matrix(c(1,0,0,3), ncol = 2) 
+sig
+
+
+
+for (i in c(1:lng)){
+  for (j in c(1:lng)){
+    funvals[i,j] = dmvnorm(c(xcords[j], ycords[i]), mean = mu, sigma = sig)
+  }
+}
+
+fig <- plot_ly(type = 'surface', x = ~xcords, y = ~ycords, z = ~funvals)
+fig
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
