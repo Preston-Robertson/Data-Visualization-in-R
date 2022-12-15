@@ -1,0 +1,271 @@
+---
+title: "Midterm Exam: Preston Robertson"
+output:
+  pdf_document: default
+  html_document:
+    highlight: pygments
+    theme: readable
+    toc: yes
+  word_document: default
+---
+
+<!--
+    toc: true
+    toc_depth: 3
+-->
+
+```{r setup, include=FALSE}
+# fig.width=6.5 good for knitting; fig.width=3.5 better for PDF / Word
+knitr::opts_chunk$set(echo=TRUE, cache=TRUE, fig.asp=0.65, fig.width=6.5, comment = "")
+require(tidyverse)
+require(nycflights13)
+require(lubridate)
+```
+
+
+```{r}
+# Fixing the flights data
+
+make_datetime_100 <- function(year, month, day, time) {
+  make_datetime(year, month, day, time %/% 100, time %% 100)
+}
+
+
+flights_fixed <- flights %>%
+  filter(!is.na(dep_time), !is.na(arr_time)) %>%
+  mutate(
+    dep_time = make_datetime_100(year, month, day, dep_time),
+    arr_time = make_datetime_100(year, month, day, arr_time),
+    sched_dep_time = make_datetime_100(year, month, day, sched_dep_time),
+    sched_arr_time = make_datetime_100(year, month, day, sched_arr_time)
+  ) %>%
+  select(origin, dest, ends_with("delay"), ends_with("time"))
+
+```
+
+
+
+
+All of these problems are from the *R for Data Science* book.  The section numbers (e.g., "3.2.4 Exercises") refer to sections in this book.
+
+When solving these problems, you are allowed to use any method from the book or class, even if that method wasn't yet covered when the exercise was presented in the book. 
+
+Because this is an exam, you need to do the work by yourself.  Do not collaborate on this exam.  
+
+This exam is out of 60 points.
+
+***
+## 12.2.1 Exercises
+
+### (1) 12.2.1 Exercise 2 (10 pts)
+
+Compute the `rate` for `table2`, and `table4a` + `table4b`. You will need to perform four operations
+:
+```{r}
+
+table1
+
+table2 #Cases and Population are in separate rows
+
+table3
+
+table4a # Cases and Population are in different tables
+table4b
+
+```
+
+  1. Extract the number of TB cases per country per year.
+  
+  2. Extract the matching population per country per year.
+  
+  3. Divide cases by population, and multiply by 1000.
+  
+  4. Store back in the appropriate place.
+  
+
+Which representation is easiest to work with? Which is hardest? Why?
+```{r}
+
+# Table 2
+
+# First step take out old values (parts 1 and 2)
+t2_case <- filter(table2, type == "cases") %>%
+  rename(cases = count) %>%
+  arrange(country, year) # Keeping order
+t2_pop <- filter(table2, type == "population") %>%
+  rename(population = count) %>%
+  arrange(country, year)
+
+# Step 2 calculate the rate
+t2_rate <- tibble(year = t2_case$year, country = t2_case$country,cases = t2_case$cases,
+                  population = t2_pop$population) %>%
+  mutate(rate = (cases / population) * 1000) %>% #Doing part 3
+  select(country, year, rate)
+
+# Step 3 Combine the rate with table 2
+t2_rate <- t2_rate %>%
+  mutate(type = "rate") %>%
+  rename(count = rate) #So rate will go to the proper column
+bind_rows(table2, t2_rate) %>%
+  arrange(country, year, type, count)
+
+table2
+
+
+# Table 4
+
+# Table 4 is already split so just make a new table and skip step 1 and step 3 above
+table4 <- tibble(
+    country = table4a$country,
+    `1999` = table4a[["1999"]] / table4b[["1999"]] * 1000, # First value is table cases of 1999 and second is population of `1999
+    `2000` = table4a[["2000"]] / table4b[["2000"]] * 1000
+  )
+
+table4
+
+
+# Which is harder to work with? Easily table2 for me. The data sets that I normally work with do not work like a branching system where the previous columns work as dictionaries for the value column. It took me forever to think to take out the values and then do the math. It also was difficult to find out to plug them back in, I had to "jerry-rig" by just saying rate is count. Table4 allowed for simple operations already plugged into r. It is still inconvenient to call multiple different tables, but way more manageable than table2 for me.
+
+```
+
+
+
+## 12.3.3 Exercises
+
+### (2) 12.3.3 Exercise 1 (10 pts)
+
+Why are `pivot_longer()` and `pivot_wider()` not perfectly symmetrical?
+Carefully consider the following example: 
+
+(Hint: look at the variable types and think about column *names*.) `pivot_longer()` has a `names_transform` argument.  What does it do?
+
+```{r}
+
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016),
+  half  = c(   1,    2,     1,    2),
+  return = c(1.88, 0.59, 0.92, 0.17)
+)
+
+stocks
+
+stocks_wrong <- stocks %>% 
+  pivot_wider(names_from = year, values_from = return) %>% 
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return")
+
+stocks_wrong
+
+# The pivot_longer() function turned the year column from a numeric value (double) to a character value. This is because the 'names_to' function inside pivot_longer assumes all values to be a character. 
+
+# The 'names_transform' argument allows the user to change the character type from the 'names_to' argument back to a numeric data type.
+
+stocks %>%
+  pivot_wider(names_from = year, values_from = return)%>%
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return", names_transform = list(year = as.numeric))
+
+```
+
+
+
+
+## 16.3.4 Exercises
+
+### (3) 16.3.4 Exercise 2 (10 pts)
+
+Compare `dep_time`, `sched_dep_time` and `dep_delay`.  I recommend looking at the distributions over an hour.  Are they consistent?  Explain your findings.
+```{r}
+
+Question3.1 <- flights_fixed %>% select(contains('dep')) %>%
+  mutate(calculated_delay = as.numeric(dep_time - sched_dep_time) / 60) %>% #Calculating departure delay manually
+  filter(dep_delay != calculated_delay) #Filtering all the inconsistencies
+
+Question3.1
+
+flights_fixed %>% select(contains('dep')) %>%
+  mutate(cal_delay = as.numeric(dep_time - sched_dep_time) / 60) %>%
+  filter(dep_delay != cal_delay) %>%
+  mutate(dep_time = update(dep_time, mday = mday(dep_time) + 1)) %>% #Adding one day to all of the previous table
+  mutate(cal_delay = as.numeric(dep_time - sched_dep_time)) %>% # Re-doing above process
+  filter(dep_delay != cal_delay)
+
+# Looking at the below table, you can see that the calculated delay shows that some flights actually leave earlier and were not delayed. However that was probably a mistake on the people recording the flights. To fix this we are going to add a day onto negative values
+
+```
+
+
+
+### (4) 16.3.4 Exercise 4 (10 pts)
+
+How does the average departure delay change over the course of a day?  Should you use `dep_time` or `sched_dep_time`?  Why?
+```{r}
+
+# We should you scheduled departure time since that is what the delay is based on.
+# Looking at the graph, we can see a clear trend that the farther the day goes until around 7pm the delays add up. The delays are probably due to a mix of busyness during those times, plus other flights being delayed have a ripple effect on the airport.
+
+flights_fixed %>%
+  mutate(hour = hour(sched_dep_time)) %>%
+  group_by(hour) %>%
+  summarize(avg_dep_delay = mean(dep_delay)) %>%
+  ggplot(mapping = aes(x = hour, y = avg_dep_delay)) +
+  geom_smooth() +
+  labs(y = "Depature Delay", x = "Hour")
+
+```
+
+
+
+
+
+### (5) 16.3.4 Exercise 5 (10 pts)
+
+On what day of the week should you leave if you want to minimize the chance of a departure delay?
+```{r}
+
+flights_days <- flights_fixed %>%
+  mutate(days = wday(sched_dep_time)) %>% # Grouping into day of the week, Sunday is 1
+  group_by(days) %>%
+  summarise(
+    dep_delay = mean(dep_delay), #Averaging all values into a single one.
+    arr_delay = mean(arr_delay, na.rm = TRUE)
+  ) 
+
+
+  
+ggplot(flights_days) +
+  geom_point(mapping = aes(x = days, y = dep_delay, colour = "red")) +
+  geom_smooth(mapping = aes(x = days, y = dep_delay, colour = "red")) +
+  geom_point(mapping = aes(x = days, y = arr_delay, colour = "blue")) +
+  geom_smooth(mapping = aes(x = days, y = arr_delay, colour = "blue"))+
+  labs(y = "Depature Delay", x = "Day of the Week")
+
+
+# Saturdays look like the bast day to leave if you are minimizing delays. This is due to lower average delays and even average arriving early on Saturdays.
+
+```
+
+
+
+
+### (6) 16.3.4 Exercise 6 (10 pts)
+
+What makes the distribution of `diamonds$carat` and `flights$sched_dep_time` similar?
+```{r}
+
+# Not going to lie, it took me a while to figure out this problem but it makes so much sense now.
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(binwidth = .05) + 
+  labs(y = "Count",x = "Carat")
+
+ggplot(flights_fixed, aes(x = minute(sched_dep_time))) +
+  geom_histogram(binwidth = 1)+
+  labs(y = "Count",x = "Scheduled Depature Times")
+
+# Looking at the two graphs, it is easy to see that both distributions of data have spikes. This is due to the nature of both data sets. Where each sculptor for the diamond has a goal for the size of diamond and wants no less than a whole number carat. The same way the flights want to leave in minutes ending in 5 or 0 since it is easier for people to understand.
+
+```
+
+
+
+
+
