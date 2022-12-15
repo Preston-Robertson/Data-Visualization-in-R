@@ -1,0 +1,139 @@
+---
+title: "Homework 3"
+author: "Preston Robertson"
+date: "6/13/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Law of Large Numbers 
+```{r cars}
+# 2
+
+set.seed(123)
+A <- rbinom(2000,20,0.35)
+hist(A)
+
+
+
+```
+
+## Exploratory Data Analysis (EDA)
+
+
+
+```{r}
+
+samavg <- rep(0,2000)
+n <- c(1:2000)
+
+for(i in n){
+  samavg[i] = mean(A[1:i])
+}
+
+plot(n, samavg, type = "l", xlab = 'n', ylab = '', main = "Convergence of x-bar")
+
+```
+
+
+## Cauchy
+
+```{r}
+
+#set.seed(123)
+
+x <- seq(-10,10, length = 100)
+fcauchy <- dcauchy(x)
+plot(x, fcauchy, type = "l")
+
+samavgC <- rep(0,2000)
+n <- c(1:2000)
+
+for (i in n){
+  samavgC[i] = mean(fcauchy[1:i])
+}
+
+plot(n, samavgC, type = "l", xlab = 'n', ylab = '', main = "convergence of x-bar")
+
+
+
+```
+
+
+
+## Question 3 
+# A
+```{r}
+
+SampleAverageEx <- rep(0, 1000)
+t <- c(1:1000)
+Zrate5 <- rep(0,1000)
+EX = 1/5
+VarX = 1/25
+
+for (i in t){
+  E <- rexp(5, rate = 5)
+  SampleAverageEx[i] = mean(E)
+  Zrate5[i] = sqrt(i)*(SampleAverageEx[i] - EX)/VarX
+}
+
+hist(SampleAverageEx)
+hist(Zrate5)
+
+```
+
+# B
+```{r}
+set.seed(123)
+
+SampleAverageEx <- rep(0, 1000)
+t <- c(1:1000)
+Zrate50 <- rep(0,1000)
+EX = 1/5
+VarX = 1/25
+
+for (i in t){
+  E <- rexp(500, rate = 5)
+  SampleAverageEx[i] = mean(E)
+  Zrate50[i] = sqrt(500)*(SampleAverageEx[i] - EX)/sqrt(VarX)
+}
+
+hist(SampleAverageEx)
+hist(Zrate50)
+
+```
+
+# C
+
+```{r}
+set.seed(123)
+Binomial <- rbinom(n = 1000, size = 10, p = .3)
+hist(Binomial)
+```
+
+
+```{r}
+set.seed(123)
+
+SampleAverageEx <- rep(0, 1000)
+t <- c(1:1000)
+Zrate50 <- rep(0,1000)
+EX = 1/5
+VarX = 1/25
+
+for (i in t){
+  Bin <- rbinom(n = 1000, size = 10, p = .3)
+  SampleAverageEx[i] = mean(Bin)
+  Zrate50[i] = sqrt(10)*(SampleAverageEx[i] - EX)/sqrt(VarX)
+}
+
+hist(SampleAverageEx, main = 'N = 10, p = .3')
+hist(Zrate50)
+```
+
+
+
+

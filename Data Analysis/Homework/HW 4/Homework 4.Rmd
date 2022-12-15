@@ -1,0 +1,62 @@
+---
+title: "DA HW 4"
+author: "Preston Robertson"
+date: "6/20/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+qt(.975, df=50)
+
+sqrt(0.909704)
+0.07462564 + 2.262*(0.953784)/3
+
+```
+
+
+
+```{r}
+set.seed(123)
+dat <- rnorm(10, mean = 0, sd = 1)
+
+# Mean
+datasum = 0
+t <- c(1:10)
+for(i in t){
+datasum = datasum + dat[i]
+}
+xbar = datasum / 10
+
+
+# Simple Variance
+datvar = 0
+for(i in t){
+datvar = datvar + (dat[i] - xbar)^2
+}
+sqr = datvar / (10-1)
+```
+
+
+
+```{r}
+
+# Question 3
+
+set.seed(123)
+dat = rnorm(100, 0,1)
+hist(dat)
+
+tsa = sqrt(100)*mean(dat)
+tsa
+
+set.seed(124)
+datb = rnorm(100, .5, 1)
+hist(datb)
+
+tsb = sqrt(100)*mean(datb)
+tsb
+```
+
+
+

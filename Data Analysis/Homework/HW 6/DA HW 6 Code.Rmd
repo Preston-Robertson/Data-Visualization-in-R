@@ -1,0 +1,305 @@
+---
+title: "DA HW 6"
+author: "Preston Robertson"
+date: "6/22/2022"
+output: pdf_document
+---
+
+```{r}
+# Loading Libraries
+library(plotly)
+library(mvtnorm)
+library(matrixcalc)
+library(pracma)
+library(data.table)
+library(ellipse)
+library(climate)
+
+```
+
+
+
+
+```{r}
+# Introduction to Plotly
+
+fig <- plot_ly(z = ~volcano)
+fig <- fig%>% add_surface()
+fig
+
+
+```
+
+
+
+
+
+```{r}
+
+xcords <- seq(-3,3, by = 0.1)
+ycords <- seq(-3,3,by = 0.1)
+
+lng = length(xcords)
+
+
+
+funvals = matrix(0, lng, lng)
+
+
+
+mu = c(0,0)
+sig <- matrix(c(1,-0.5,-0.5,1), ncol = 2) 
+sig
+
+
+
+for (i in c(1:lng)){
+  for (j in c(1:lng)){
+    funvals[i,j] = dmvnorm(c(xcords[j], ycords[i]), mean = mu, sigma = sig)
+  }
+}
+
+fig <- plot_ly(type = 'surface', x = ~xcords, y = ~ycords, z = ~funvals)
+fig
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+
+is.positive.definite(sig, tol = 1e-8)
+
+
+sig <- matrix(c(1,2,0,3), ncol = 2)
+is.positive.definite(sig, tol = 1e-8)
+
+```
+
+
+
+```{r}
+
+# Question 2
+
+xcords <- seq(-3,3, by = 0.1)
+ycords <- seq(-3,3,by = 0.1)
+
+lng = length(xcords)
+
+
+
+funvals = matrix(0, lng, lng)
+
+
+
+mu = c(0,1)
+sig <- matrix(c(3,0.2,0.2,1), ncol = 2) 
+sig
+
+
+
+for (i in c(1:lng)){
+  for (j in c(1:lng)){
+    funvals[i,j] = dmvnorm(c(xcords[j], ycords[i]), mean = mu, sigma = sig)
+  }
+}
+
+fig <- plot_ly(type = 'surface', x = ~xcords, y = ~ycords, z = ~funvals)
+fig
+```
+
+
+
+```{r}
+
+# Question 1 part A
+
+set.seed(123)
+
+eps <- rnorm(30,0,5)
+t <- c(1:30)
+Y = rep(0,30)
+
+beta0 = 1
+beta1 = 2
+
+
+for(i in t){
+  Y[i] = beta0 + beta1*i + eps[i]
+}
+
+
+plot(t,Y, main = 'Y vs t', xlab = 't', ylab = 'Y')
+
+```
+
+
+
+# Missed Stuff
+
+```{r}
+
+# Question 1b
+
+
+```
+
+
+
+
+```{r}
+
+# Question 1C and 1D
+
+x1<- rep(1,30)
+x2<- c(1:30)
+X<- cbind(x1,x2)
+
+betahat = solve(t(x) %*% X) %*% t(x) %*% Y
+betahat
+
+
+I = eye(30)
+sigmahatsqrd = t(Y)%*%(I - X%*%solve(t(X)%*%X)%*%t(x)%*%Y/(30-2))
+view(sigmahatsqrd)
+
+```
+
+
+```{r}
+# Question 1E
+
+
+
+
+# Question 1F
+
+
+
+
+```
+
+
+```{r}
+# Question 1G
+
+set.seed(123)
+n=2500
+index = c(1:n)
+beta1h = rep(0,n)
+beta2h = rep(0,n)
+
+for (i in index){
+  eps = rnorm(30,0,5)
+  betan = c(1,2)
+  Y = X %*% betan + eps
+  betahat = solve(t(x) %*% X ) %*% t(X) %*% Y
+  beta1h[i] = betahat[1]
+  beta2h[i] = betahat[2]
+}
+
+betahatot = cbind(beta1h, beta2h)
+plot(betahatot)
+```
+
+
+```{r}
+
+
+# Question 1G ???
+
+lmod1 = lm(Y~x2)
+summary(lmod1)
+confint(lmod1)
+plot(ellipse(lmod1, type = "l"))
+abline(v = -1.063572)
+abline(v = 6.405880)
+abline(h = 1.666617)
+abline(h = 2.087361)
+
+
+```
+
+
+
+```{r}
+# Question 3
+Mauna = meteo_noaa_co2()
+head(Mauna)
+
+Y = Mauna$co2_avg
+size(Y)
+t = c(1:771)
+plot(t,Y, type = "l")
+plot(Mauna$yy_d, Mauna$co2_avg, type='l') # What the one above is supposed to be
+```
+
+
+```{r}
+
+
+lmodM = lm(Y ~ t)
+lmodM
+plot(lmodM)
+plot(lmodM$residuals)
+
+
+```
+
+
+```{r}
+
+ts = rep(0, 744)
+for (i in t){
+  ts[i] = i^2
+}
+
+lmodMq = lm(Y~t+ts)
+plot(t, lmodMq$residuals, type = 'l')
+```
+
+
+```{r}
+
+T = 12
+C = rep(0,744)
+
+for (i in t){
+  C[i] = cos(2*pi*i/T)
+}
+
+S = rep(0, 744)
+
+for (i in t) {
+  S[i] = sin(2*pi*i/T)
+}
+
+plot(t,C)
+plot(t,S)
+
+lmodS = lm(Y~t+ts+C+S)
+plot(t, lmodS$residuals, type = "l")
+
+
+```
+
+```{r}
+
+ones = rep(1, 744)
+
+X = cbind(ones, t, ts, S, C)
+
+#View(X)
+
+betahat = solve (t(X) %*% X) %*% t(X) %*% Y
+
+yhat = X %*% betahat
+yhat
+
+plot(t, Y, type = "l")
+lines(t, yhat, col = "red")
+
+```
+

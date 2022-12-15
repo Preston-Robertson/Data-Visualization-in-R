@@ -1,0 +1,79 @@
+---
+title: "Homework 1"
+author: "Preston Robertson"
+date: "6/4/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(tidyverse)
+library(modelr)
+library(dplyr)
+
+```
+
+
+## Provide a summary of the data. That is, what are the variables. Provide summary statistics for each variable.
+```{r}
+summary(airquality)
+```
+
+
+```{r}
+dat = airquality
+
+
+dat <- dat %>%
+  mutate(dat, ifelse(Month == 5,Actual_Day = Day, 
+                     ifelse(Month == 6, Actual_Day = Day + 31, ifelse(Month == 7,Actual_Day = Day + 61, ifelse(Month == 8, Actual_Day = Day + 92, Actual_Day = Day + 123)))))
+
+dat
+```
+
+
+
+## Make a time series plot for each variable in the airquality data set. Make sure to label each plot carefully. Extra for labeling the months of the data on the x-axis.
+
+```{r pressure, echo=FALSE}
+
+ggplot(airquality, aes(x = Day, y = Ozone)) +
+  #geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(Month))
+
+ggplot(airquality, aes(x = Day, y = Solar.R)) +
+  #geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(Month))
+
+ggplot(airquality, aes(x = Day, y = Wind)) +
+  #geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(Month))
+
+ggplot(airquality, aes(x = Day, y = Temp)) +
+  #geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(Month))
+
+```
+
+
+
+
+## Make side by side boxplots for the ozone data for each month. Do you believe the distribution of the ozone is the same for each month.
+```{r}
+
+```
+
+
+
+
+## Compute the correlation and covariance matrix for the variables in the airquality data set.
+```{r}
+
+```
+
+

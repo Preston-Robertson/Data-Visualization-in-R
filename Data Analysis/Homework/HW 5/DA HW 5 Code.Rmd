@@ -1,0 +1,233 @@
+---
+title: "DA HW 5"
+author: "Preston Robertson"
+date: "6/23/2022"
+output: html_document
+---
+
+
+
+########## HW 5 #########
+```{r}
+##################### HW5 #1 #################
+set.seed(123)
+dat1 <- rep(0,1000)
+dat2 <- rep(0,1000)
+dat <- cbind(dat1,dat2)
+t <- c(1:100)
+s <- c(1:10)
+for (i in t){
+  for (j in s){
+    dat[(i-1)*10+j,1] = i
+    dat[(i-1)*10+j,2] = rnorm(1,0,1)
+  }
+  
+}
+
+####### Quick Diagnostic ##############
+hist(dat[,2])         ## seems ok
+######################################
+
+
+############### Get Means and SD's ##############
+means <- rep(0,100)
+sds <- rep(0,100)
+for (i in t){
+  t1 = 10*(i-1)+1
+  t2 = 10*i
+  means[i] = mean(dat[t1:t2,2])
+  sds[i] = sd(dat[t1:t2,2])
+}
+
+#boxplot(dat[,2]~dat[,1])
+#abline(0,0)
+plot(t,means, main = "Side by Side 90% C.I.s", xlab = "Group")
+for (i in t){
+  lines(c(i,i),c(means[i]- 1.833113*sds[i]/3,means[i]+ 1.833113*sds[i]/3))
+  }
+abline(0,0)
+count = 0
+for (i in t){
+  if (means[i]- 1.833113*sds[i]/3>0 || means[i]+ 1.833113*sds[i]/3<0){
+    count = count+1
+  }
+
+}
+```
+
+
+```{r}
+
+
+
+######## Question 1 ########
+
+set.seed(123)
+dat1 <- rep(0,1000)
+dat2 <- rep(0,1000)
+dat  <- cbind(dat1,dat2)
+t    <- c(1:100)
+s    <- c(1:10)
+
+for (i in t) {
+  for (j in s){
+    
+    dat[(i-1)*10+j,1] = i
+    dat[(i-1)*10+j,2] = rnorm(1,0,1)
+    
+    
+  }
+}
+
+```
+
+
+
+```{r}
+
+#### Quick Diagnostic ####
+
+hist(dat[,2]) # Seems ok ##
+
+``` 
+
+
+```{r}
+
+
+## Computing means and standard deviations ##
+
+means <- rep(0,100)
+sds   <- rep(0,100)
+
+for (i in t){
+  
+  t1 = 10*(i-1)+1
+  t2 = 10*i
+  
+  means[i] = mean(dat[t1:t2,2])
+  sds[i]   = sd  (dat[t1:t2,2])
+  
+}
+
+```
+
+
+```{r}
+
+
+# Plotting both as quick diagnostic #
+plot(t,means)
+hist(sds)
+
+```
+
+
+```{r}
+
+
+## Generating box plots ##
+
+boxplot(dat[,2]~dat[,1])
+abline(0,0)
+
+```
+
+################################
+
+
+```{r}
+
+
+t_val = qt(0.95,9,lower.tail = TRUE,log.p = FALSE)
+
+plot(t,means,ylim = c(-2,2), main= "Side by Side 90% C.I.s", 
+     xlab = "Group", ylab = "Means", family = "TNR")
+abline(0,0)
+
+for (i in t){
+  
+  lines(c(i,i),c(means[i]-t_val*sds[i]/3,means[i]+t_val*sds[i]/3))
+  
+}
+
+```
+
+
+```{r}
+
+
+#### Counting number of CIs that don't contain 0 ####
+
+count = 0
+
+
+for (i in t){
+  
+  if (abs(means[i]) > abs(t_val * sds[i]/3)) {
+    
+    count = count + 1
+  }
+  
+}
+
+count
+
+```
+
+################################################################
+
+
+```{r}
+######## Question 2a ########
+
+set.seed(123)
+normdat = rnorm (100,0,1)
+qqnorm(normdat, pch = 1, frame = F, family = "TNR")
+qqline(normdat, col = "steelblue", lwd = 2)
+```
+
+
+```{r}
+######## Question 2b ########
+
+set.seed(123)
+cauchdat = rcauchy (100,0,1)
+qqnorm(cauchdat, pch = 1, frame = F, family = "TNR", ylim = c(-20,20),  main = "Cauchy Q-Q Plot")
+qqline(cauchdat, col = "steelblue", lwd = 2)
+
+```
+
+
+
+
+```{r}
+
+# Question 3
+
+
+X <- rbinom(n = 100, size = 30, prob = 0.35)
+
+Y <- rbinom(n = 100, size = 45, prob = 0.6)
+
+
+X <- rbinom(n = 30, size = 5, prob = 0.35)
+
+Y <- rbinom(n = 45, size = 5, prob = 0.6)
+
+plot(X,Y)
+X
+Y
+
+t.test(X, Y, alternative = "two.sided")
+
+prop.test(X, n = 30, p = 0.35)
+
+```
+
+#####
+#END#
+#####
+
+
+
