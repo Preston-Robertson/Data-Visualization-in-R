@@ -1,0 +1,291 @@
+---
+title: "Homework-4:  Preston Robertson"
+output:
+  word_document: default
+  html_document:
+    highlight: pygments
+    theme: readable
+    toc: yes
+  pdf_document: default
+---
+
+<!--
+    toc: true
+    toc_depth: 3
+-->
+
+```{r setup, include=FALSE}
+# fig.width=4.5 good for general work; fig.width=3.5 better for PDF / Word
+knitr::opts_chunk$set(echo=TRUE, cache=TRUE, fig.asp=0.65, fig.width=6.5)
+require(tidyverse)
+library(modelr)
+library(dplyr)
+options(na.action = na.warn)
+```
+
+All of these homework problems are from the *R for Data Science* book.  The section numbers (e.g., "3.2.4 Exercises") refer to sections in this book.  Although the questions are based on those in the book, some questions ask for additional details or analysis.
+
+When solving these problems, you are allowed to use any method from the book or class, even if that method wasn't yet covered when the exercise was presented in the book. 
+
+Write answers that are as complete as possible.  If a graph is helpful for formalizing the solution, provide the graph.  If a table is helpful, provide a table.  In the text part of the answer, outline the progression in your thinking as you perform the analysis.  
+
+Note that you should type your answers in RStudio, by typing into the file **Homework-4.sa.Rmd**.
+
+***
+## 23.2.1 Exercises
+
+### (1) 23.2.1 Exercise 1
+
+One downside of the linear model is that it is sensitive to unusual values because the distance incorporates a squared term. Fit a linear model to the simulated data below, and visualize the results. Rerun everything 6 times to generate different simulated datasets, and also examine the slope and intercept of the generated models, as well as the $R^2$ values.  How much variability do you see?  How do the data values affect the model?
+
+```{r}
+
+# Changed to a function to make it iteratable, and added a variable for iterations.
+
+sim1a <- function(i){
+  tibble(
+    x = rep(1:10, each = 3),
+    y = x * 1.5 + 6 + rt(length(x), df = 2),
+    .id = i
+  )
+}
+
+```
+
+*Hint*: To make it easy to do this 6 times, it makes sense to wrap everything into a function, and call that from within a `for` loop.  The following code will help you accomplish this: 
+
+```{r}
+
+# Below we can see very high variability between each run in terms of correctness. In terms of the slope however, the linear models seem to portray the same slope. The data has a huge effect on the model, and that makes sense because the machine learning techniques are based on these models.
+
+sims <- map_df(1:6, sim1a)
+
+ggplot(sims, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm", colour = "red") +
+  facet_wrap(~.id, ncol = 3)
+
+```
+
+
+
+***
+### (2) 23.2.1 Exercise 2
+
+One way to make linear models more robust is to use a different distance measure. For example, instead of root-mean-squared (RMS) distance, you could use mean-absolute-deviation (MAD) distance:
+
+Use `optim()` to fit this model to the simulated data above and visually compare it to the linear model, again examining at least 6 instances.  You want both models to be drawn on top of each instance of the simulated data set.  Discuss what you find.
+
+*Hints*: `make_prediction()` is not a built-in function; you will need to create your own linear function.  Unlike Exercise 1, here you should only compare the models graphically; I don't think the $R^2$ metric is meaningful for a model that uses the MAD distance measure.
+
+
+```{r}
+
+# I understand the code below is not very optimized but I could not figure out how to make a proper looping function because I kept getting the error "data$y is closure variable".
+
+# The two models perform very similarly on each iteration; however the RMS model is more effected by outlier data than the MAD model is. 
+
+
+
+
+sum <- 0
+
+repeat{
+ sum <- sum + 1
+ 
+ if (sum == 7){
+  break
+ }
+
+
+model1 <- function(a, data) {
+  a[1] + data$x * a[2]
+}
+
+measure_distanceMAD <- function(mod, data) {
+  diff <- data$y - model1(mod, data)
+  mean(abs(diff))
+}
+
+measure_distanceRMS <- function(mod, data) {
+  diff <- data$y - model1(mod, data)
+  sqrt(mean(diff ^ 2))
+}
+
+sim1a <- tibble(
+  x = rep(1:10, each = 3),
+  y = x * 1.5 + 6 + rt(length(x), df = 2)
+)
+
+best1 <- optim(c(0,0), measure_distanceMAD, data = sim1a)
+best2 <- optim(c(0,0), measure_distanceRMS, data = sim1a)
+
+plot1 <- ggplot(sim1a, aes(x, y)) + 
+  geom_point() + 
+  geom_abline(intercept = best1$par[1], slope = best1$par[2], color = "red")+
+  geom_abline(intercept = best2$par[1],slope = best2$par[2], color = "blue")
+
+print(plot1)
+
+}
+```
+
+
+
+
+
+***
+## 23.3.3 Exercises
+
+### (3) 23.3.3 Exercise 1
+
+Instead of using `lm()` to fit a straight line, you can use `loess()` to fit a smooth curve. Repeat the process of model fitting, grid generation, predictions, and visualization on `sim1` using `loess()` instead of `lm()`. How does the result compare to `geom_smooth()`?
+```{r}
+
+# 'geom_smooth()' uses 'loess()' as a default so they should look exactly the same. 
+
+sim1_loess <- loess(y ~ x, data = sim1)
+
+grid_loess <- sim1 %>%
+  add_predictions(sim1_loess)
+
+sim1 <- sim1 %>%
+  add_residuals(sim1_loess, var = "resid_loess") %>%
+  add_predictions(sim1_loess, var = "pred_loess")
+
+plot_sim1_loess <-
+  ggplot(sim1, aes(x = x, y = y)) +
+  geom_line(aes(x = x, y = pred), data = grid_loess, colour = "blue")+
+  geom_smooth(colour = "red", se = FALSE)
+plot_sim1_loess
+
+```
+
+
+
+### (4) 23.3.3 Exercise 2
+
+`add_predictions()` is paired with `gather_predictions()` and `spread_predictions()`. Use both `gather_predictions()` and `spread_predictions()` to repeat the analysis with the two models used in problem (3) above.  How do these three functions differ?
+```{r}
+
+# The functions differ on how the data is stored. The gather predictions first selects one model then runs predictions on each model separately. Spread instead uses the same x and shows the result of each machine learning technique side by side. Personally, I see spread being the more useful and more effective calling of the predictions.
+
+
+# Assumed the second model is supposed to be 'lm()'
+
+sim1_mod <- lm(y ~ x, data = sim1)
+grid <- sim1 %>%
+  data_grid(x)
+
+grid %>%
+  gather_predictions(sim1_mod, sim1_loess)
+
+grid %>%
+  spread_predictions(sim1_mod, sim1_loess)
+
+```
+
+
+
+### (5) 23.3.3 Exercise 3
+
+What does `geom_ref_line()` do?  What package does it come from?  Why is displaying a reference line in plots showing residuals useful and important?
+```{r}
+
+# It simply adds a reference line through all the graphs to easier see the correlation.
+
+mod1 <- lm(y ~ x1 + x2, data = sim3)
+mod2 <- lm(y ~ x1 * x2, data = sim3)
+
+grid <- sim3 %>%
+  data_grid(x1, x2) %>%
+  gather_predictions(mod1, mod2)
+grid
+
+sim3r <- sim3 %>%
+  gather_residuals(mod1, mod2)
+sim3r
+
+ggplot(sim3r, aes(x = x1, y = resid, color = x2)) +
+  geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(model), cols = vars(x2))
+
+```
+
+
+
+### (6) 23.3.3 Exercise 4
+
+Why might you want to look at a frequency polygon of absolute residuals? What are the pros and cons compared to looking at the raw residuals?
+```{r}
+
+# Since the direction of the residual does not matter, it allows the user to more effectively see the the values of the residual.
+
+
+sim1 <- sim1 %>%
+  add_residuals(sim1_mod)
+
+ggplot(sim1, aes(x = abs(resid))) +
+  geom_freqpoly(binwidth = 0.5)
+
+ggplot(sim1, aes(x = resid)) +
+  geom_freqpoly(binwidth = 0.5)
+
+```
+
+
+
+***
+## 23.4.5 Exercises
+
+
+
+### (7) 23.4.5 Exercise 4
+
+For `sim4`, which of `mod1` and `mod2` is better?  The book author believes that `mod2` does a slightly better job at removing patterns, but claims the effects are subtle.  Examine the $R^2$ values for the two models, and develop a plot that attempts to support this claim.  In the end, how well does your plot support the claim?  How likely is it that the claim is true?
+```{r}
+# I mean the R^2 score shows that both models are not particularly good at predicting, the mod2 has a better score but when it is that close to .50 then both models are just not good enough to be used. In the plot, it can be seen that the mod2 has a more condense residual spread, but still not enough to be viable.
+```
+
+
+```{r}
+mod1 <- lm(y ~ x1 + x2, data = sim4)
+mod2 <- lm(y ~ x1 * x2, data = sim4)
+```
+
+
+```{r}
+grid <- sim4 %>%
+  data_grid(x1,x2)
+grid <- grid %>%
+  gather_predictions(mod1, mod2)
+
+sim4_mods <- gather_residuals(sim4, mod1, mod2)
+```
+
+
+```{r}
+m1r <- summary(mod1)$r.squared
+m2r <- summary(mod2)$r.squared
+print(sprintf("mod1 R^2: %.1f%%", m1r*100))
+print(sprintf("mod2 R^2: %.1f%%", m2r*100))
+print(sprintf("R^2_mod2 - R^2_mod1: %.1f%%", (m2r - m1r)*100))
+```
+
+
+```{r}
+ggplot(sim4_mods, aes(x = x1, y = resid, color = x2)) +
+  geom_ref_line(h = 0, colour = 'red') +
+  geom_point() +
+  facet_grid(rows = vars(model), cols = vars(x2))
+
+
+```
+
+
+
+
+
+
+
