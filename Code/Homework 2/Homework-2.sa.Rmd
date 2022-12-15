@@ -1,0 +1,358 @@
+---
+title: "Homework-2: *Your Name Here*"
+output:
+  word_document: default
+  html_document:
+    highlight: pygments
+    theme: readable
+  pdf_document: default
+---
+
+<!--
+    toc: true
+    toc_depth: 3
+-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, cache=TRUE, fig.asp=0.65, fig.width=5.5)
+require(tidyverse)
+require(nycflights13)
+require(lubridate)
+library(maps)
+```
+
+All of these homework problems are from the *R for Data Science* book.  The section numbers (e.g., "3.2.4 Exercises") refer to sections in this book.  Although the questions are based on those in the book, some questions ask for additional details or analysis.
+
+When solving these problems, you are allowed to use any method from the book or class, even if that method wasn't yet covered when the exercise was presented in the book. 
+
+Write answers that are as complete as possible.  If a graph is helpful for formalizing the solution, provide the graph.  If a table is helpful, provide a table.  In the text part of the answer, outline the progression in your thinking as you perform the analysis.  
+
+Note that you should type your answers in RStudiop, by typing into the file **Homework-2.sa.Rmd**.
+
+***
+## 3.7.1 Exercises
+
+### (1) 3.7.1 Exercise 1, (10 pts)   ################################################################
+
+Consider the following plot:
+```{r}
+ggplot(data = diamonds) +
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.min = min,
+    fun.max = max,
+    fun = median
+    )
+```
+
+What is the default geom associated with `stat_summary()`?
+# The geometry associated would be a line. More specifically a hybrid of a frequency and bar plot.
+
+How could you rewrite the plot code so that it drew the same graph, but used the default geom instead of `stat_summary()`?
+# geom_pointrange() = stat_summary().
+```{r}
+ggplot(data = diamonds) +
+  geom_pointrange(
+    mapping = aes(x = cut, y = depth),
+    stat = "summary",
+    fun.min = min,
+    fun.max = max,
+    fun = median)
+```
+
+
+(Note: Ed made use of `summarize()`, but other solutions may also exist.)
+
+
+### (2) 3.7.1 Exercise 2, (5 pts)  ################################################################
+
+What does `geom_col()` do, and how is it different from `geom_bar()`?
+# The main difference between the functions is that geom_col() maps a categorical variable to a continuous one while geom_bar() just counts the number of a specific variable.
+```{r}
+ggplot(data = diamonds,mapping = aes(x = cut, y = price)) +
+  geom_col() + ggtitle("geom_col()") 
+  
+ggplot(data = diamonds,mapping = aes(x = cut)) +
+  geom_bar() + ggtitle("geom_bar()")
+
+# The main difference between the functions is that geom_col() maps a categorical variable to a continuous one while geom_bar() just counts the number of a specific variable.
+
+```
+
+
+
+### (3) 3.7.1 Exercise 4, (5 pts)  ################################################################
+
+What variables does `stat_smooth()` compute?  What parameters control its behavior?
+# stat_smooth(), or geom_smooth() takes the plot from two continous variables and attempts to map the pattern with a line rather than a scatterplot.
+```{r}
+ggplot(data = diamonds) +
+  geom_smooth(mapping = aes(x = price, y = depth))
+
+```
+
+
+
+### (4) 3.7.1 Exercise 5, (10 pts)  ################################################################
+
+In our proportion bar chart, we must set `group = 1`.  Why?  In other words, what is wrong with these two plots?
+# Group represents the percentage of data, group = 1 allows for all the data to appear meaning that the below plots could be missing important information.
+```{r, eval=FALSE}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = after_stat(prop)))
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = color, y = after_stat(prop)))
+```
+
+
+## 3.8.1 Exercises
+
+### (5) 3.8.1 Exercise 1, (10 pts)  ################################################################
+
+Given the context of this chapter, what is the problem with this plot?  How could you improve it?
+# In my opinion, the scatterplot does not capture the linear element of these components as well as geom_smooth() would capture it
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point()
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_smooth()
+```
+
+
+### (6) 3.8.1 Exercise 3, (10 pts)  ################################################################
+
+Compare and contrast `geom_jitter()` with `geom_count()`.  Demonstrate the kind of graph that `geom_count()` creates.
+# geom_jitter() and geom_count() are both variations of geom_point(). The geom_jitter() command adds variation to the data points so that it is easier for the intrepreter of the graph to see correlation in small datasets. The command geom_count() is used describe density of the data by increasing the size of points. Personally, I see the use in geom_jitter() but I would much prefer to use geom_count() to cover up missing points in the graph.
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_jitter()
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_count()
+```
+
+
+
+### (7) 3.8.1 Exercise 4, (10 pts)  ################################################################
+
+What is the default position adjustment for `geom_boxplot()`?  Create a visualization of the `mpg` data set that demonstrates it. 
+# The default position adjustment is "dodge2" this is used to make sure each boxplot will have space between each other. If the classes could interconnect, then changing from "dodge2" to "identity" will allow the boxplots to stack. 
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot()
+
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot(position = "identity")
+```
+
+
+
+## 3.9.1 Exercises
+
+### (8) 3.9.1 Exercise 1, (10 pts)  ################################################################
+
+Turn a stacked bar chart into a pie chart using `coord_polar()`.
+```{r}
+bar2 <- ggplot(data=diamonds) +
+  geom_bar(mapping = aes(x=1,fill = cut), show.legend = FALSE, width = 1) + # Changing cut to x=1
+  theme(axis.ticks.y = element_blank(), axis.text.y=element_blank()) + # Changing Theme
+  labs(x=NULL, y=NULL)
+
+bar2
+
+bar2 + coord_polar(theta = "y")
+
+```
+
+
+
+### (9) 3.9.1 Exercise 3, (5 pts)  ################################################################
+
+What is the difference between `coord_quickmap()` and `coord_map()`?
+# They are the same function but coord_quickmap() is predetermined algorithm to prevent distortion of the straightlines from the curvature of the earth.
+```{r}
+
+state <- as_tibble(map_data("state"))
+
+ggplot(state, aes(x = long, lat, group=group)) + 
+  geom_polygon(fill="white", colour = 'black') +
+  coord_quickmap() +
+  ggtitle("coord_quickmap")
+
+ggplot(state, aes(x = long, lat, group=group)) + 
+  geom_polygon(fill="white", colour = 'black') +
+  coord_map() +
+  ggtitle("coord_map")
+```
+
+
+### (10) 3.9.1 Exercise 4, (10 pts)  ################################################################
+
+What does the plot below tell you about the relationship between city and highway mpg?  Why is `coord_fixed()` important?  What does `geom_abline()` do?
+# The graph tells me the data has a linear relationship. It is important to have coord_fixed() because it allows us directly compare x and y (since they are the same metric) without any distortion. The geom_abline() command adds the linear relationship between the data, if the coord_fixed() function is used the slope can be gathered from the abline allowing for more information to be gathered.
+```{r}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_point() + 
+  geom_abline() +
+  ggtitle("No coord_fixed()")
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_point() + 
+  geom_abline() +
+  coord_fixed() +
+  ggtitle("with coord_fixed()")
+```
+
+
+## 5.2.4 Exercises
+
+### (11) 5.2.4 Exercise 1, 70 pts (10 each))  ################################################################
+
+For the `nycflights13::flights` data set, find all flights that:
+```{r}
+flights
+```
+
+
+  1. Had an arrival delay of two or more hours
+```{r}
+filter(flights, arr_delay >= 120)
+```
+  
+  2. Flew to Houston (`IAH` or `HOU`)
+```{r}
+filter(flights, dest == 'IAH' | dest == 'HOU')
+```
+  
+  3. Were operated by United, American, or Delta
+```{r}
+filter(flights, carrier == 'DL' | carrier == 'AA' | carrier == 'US')
+```
+  
+  4. Departed in summer (July, August, and September)
+```{r}
+filter(flights, month <= 9, month >= 7)
+```
+  
+  5. Arrived more than two hours late, but didn't leave late
+```{r}
+filter(flights, dep_delay == 0, arr_delay >= 120)
+```
+  
+  6. Were delayed by at least an hour, but made up over 30 minutes in flight
+```{r}
+filter(flights, dep_delay >= 60, dep_delay - arr_delay >= 30)
+```
+  
+  7. Departed between midnight and 6am (inclusive)
+```{r}
+filter(flights, dep_time >= 0, dep_time <= 600)
+```
+  
+
+  
+
+### (12) 5.2.4 Exercise 4, (5 pts)  ################################################################
+
+Why is `NA ^ 0` not missing?  Why is `NA | TRUE` not missing?  Why is `FALSE & NA` not missing?  Can you figure out the general rule? (`NA * 0` is a tricky counterexample!)
+```{r}
+
+#NA ^ 0 = 1   # because all values raised to zero are one
+#NA | TRUE = TRUE   # because "|" is an or statement and "or TRUE" is always true.
+#NA & FALSE = FALSE   # because "," is an and function meaning "and FALSE" will always be false.
+
+# The general rule seems to be, if it applies to all numbers then it applies to NA.
+
+```
+
+
+## 5.3.1 Exercises 
+
+### (13) 5.3.1 Exercise 1, (10 pts)  ################################################################
+
+# Checking for NA values and putting them at the top then the rest of the code
+```{r}
+arrange(flights, desc(is.na(dep_time)), dep_time) 
+```
+
+
+
+### (14) 5.3.1 Exercise 4, (10 pts)  ################################################################
+
+Which flights traveled the longest distance?  Which traveled the shortest?
+# Top is the shortest flights since it is in ascending order, and vice-versa.
+```{r}
+arrange(flights, distance)
+arrange(flights, desc(distance))
+```
+
+
+## 5.4.1 Exercises
+
+### (15) 5.4.1 Exercise 1, (10 pts)  ################################################################
+
+Brainstorm as many ways as possible to select `dep_time`, `dep_delay`, `arr_time`, and `arr_delay` from `flights`.
+```{r}
+dplyr::select(flights, dep_time, dep_delay, arr_time, arr_delay)
+dplyr::select(flights, 4, 6, 7, 9)
+dplyr::select(flights, "dep_time", "dep_delay", "arr_time", "arr_delay")
+
+features <- c("dep_time", "dep_delay", "arr_time", "arr_delay")
+dplyr::select(flights, all_of(features))
+dplyr::select(flights, any_of(features))
+
+```
+
+
+
+### (16) 5.4.1 Exercise 3, (10 pts)  ################################################################
+
+What does the `any_of()` function do? Why might it be helpful in conjunction with this vector?
+
+# This can be helpful if we need data points from specific columns, and if a column is not included then there will not be an error.
+```{r, eval=FALSE}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+dplyr::select(flights, any_of(vars))
+```
+
+
+## 5.5.2 Exercises
+
+### (17) 5.5.2 Exercise 1, (10 pts)  ################################################################
+
+Currently `dep_time` and `sched_dep_time` are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to the more computationally convenient representation of number of minutes since midnight.
+
+# First half is converting the hour side to minutes and vice versa. The data was also improplerly scaled so I converted all values minus 1440 since that was the minimum I found. 
+```{r}
+
+flights_times <- mutate(flights,
+  dep_time_mins = (dep_time %/% 100 * 60 + dep_time %% 100) %% 1440,
+  sched_dep_time_mins = (sched_dep_time %/% 100 * 60 + sched_dep_time %% 100) %% 1440)
+  
+flights_times
+
+```
+
+
+
+### (18) 5.5.2 Exercise 2, (10 pts)  ################################################################
+
+Compare `air_time` with `arr_time - dep_time`.  What do you expect to see?  What do you see?  What do you need to do to fix it?
+
+# I expect the values to equal one another.
+# That is not the case, I suspect the reason is becasue how I changed midnight making the some one hour flights through midnight calculate for 23 hours.
+# I am unsure how to fix the issue.
+```{r}
+
+flights_new <- mutate(flights_times,
+                      diff = air_time - arr_time + dep_time)
+
+ggplot(data = flights_new) +
+  geom_point(mapping = aes(x=dep_time, y =arr_time, fill = diff))
+```
+
+
+
+
+
